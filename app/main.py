@@ -1,17 +1,17 @@
-from datetime import timedelta
 from typing import List
 
 from fastapi import Depends, FastAPI, HTTPException
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
 from app import models
 from app.crud import item_handler, user_handler
 from app.database import SessionLocal, engine
+from app.errors import credentials_exception
 from app.schemas import auth as auth_schema
 from app.schemas import item as item_schema
 from app.schemas import user as user_schema
-from app.services.jwt import authenticate_user, create_access_token
+from app.services.jwt import authenticate_user, create_access_token, get_token_data
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -27,9 +27,18 @@ def get_db():
     finally:
         db.close()
 
-
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
+def get_current_user(db: Session=Depends(get_db), token=Depends(oauth2_scheme)):
+    token_data = get_token_data(token)
+    email = token_data.username
+    user = None
+    if email:
+        user = user_handler.get_user_by_email(db, email)
+    if user is None:
+        raise credentials_exception
+    else:
+        return user
 
 @app.post("/login", response_model=auth_schema.Token)
 async def login(
@@ -56,7 +65,6 @@ def create_user(user: user_schema.UserCreate, db: Session = Depends(get_db)):
 
 @app.get("/users/", response_model=List[user_schema.User])
 def read_users(
-    token: str = Depends(oauth2_scheme),
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
@@ -67,7 +75,7 @@ def read_users(
 
 @app.get("/users/{user_id}", response_model=user_schema.User)
 def read_user(
-    user_id: int, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
+    user_id: int, db: Session = Depends(get_db)
 ):
     db_user = user_handler.get_user(db, user_id=user_id)
     if db_user is None:
@@ -77,12 +85,11 @@ def read_user(
 
 @app.post("/users/{user_id}/items/", response_model=item_schema.Item)
 def create_item_for_user(
-    user_id: int,
     item: item_schema.ItemCreate,
-    token: str = Depends(oauth2_scheme),
+    user: user_schema.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return item_handler.create_user_item(db=db, item=item, user_id=user_id)
+    return item_handler.create_user_item(db=db, item=item, user_id=user.id)
 
 
 @app.get("/items/", response_model=List[item_schema.Item])
