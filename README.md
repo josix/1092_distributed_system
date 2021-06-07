@@ -9,10 +9,11 @@
   5. search user's item
 
   environment set up:
-  1. pip install fastapi
-  2. pip install uvicorn
-  3. pip install sqlalchemy
-  
+  ```bash
+  pip install pipx
+  pipx install pipenv
+  pipenv install
+  ```
   how to use:
-  1. open terminal and enter "uvicorn sql_app.main:app --reload"
+  1. open terminal and enter "pipenv run uvicorn app.main:app --reload"
   2. open "http://127.0.0.1/docs/"
