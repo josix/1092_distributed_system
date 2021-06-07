@@ -1,0 +1,34 @@
+# Used as linter and formater arguments in pyinvoke
+modules = ["app", "tasks"]
+
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+uvicorn = "*"
+sqlalchemy = "*"
+fastapi = "*"
+python-multipart = "*"
+python-jose = "*"
+passlib = {extras = ["bcrpt"], version = "*"}
+bcrypt = "*"
+
+[dev-packages]
+black = "*"
+isort = "*"
+invoke = "*"
+mypy = "*"
+flake8-mypy = "*"
+pytest = "*"
+flake8 = "*"
+toml = "*"
+pylint = "*"
+
+[requires]
+python_version = "3.8"
+
+[scripts]
+lint = "inv lint"
+reformat = "inv reformat"
