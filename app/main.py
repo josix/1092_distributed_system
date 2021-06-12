@@ -1,7 +1,7 @@
 from typing import List
 
 from fastapi import Depends, FastAPI, HTTPException
-from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
 from app import models
@@ -27,9 +27,11 @@ def get_db():
     finally:
         db.close()
 
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
-def get_current_user(db: Session=Depends(get_db), token=Depends(oauth2_scheme)):
+
+def get_current_user(db: Session = Depends(get_db), token=Depends(oauth2_scheme)):
     token_data = get_token_data(token)
     email = token_data.username
     user = None
@@ -40,10 +42,9 @@ def get_current_user(db: Session=Depends(get_db), token=Depends(oauth2_scheme)):
     else:
         return user
 
+
 @app.post("/login", response_model=auth_schema.Token)
-async def login(
-    form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
-):
+async def login(form_data: auth_schema.LoginForm, db: Session = Depends(get_db)):
     user = authenticate_user(db, form_data.username, form_data.password)
     if not user:
         raise HTTPException(status_code=400, detail="Incorrect username or password")
@@ -74,9 +75,7 @@ def read_users(
 
 
 @app.get("/users/{user_id}", response_model=user_schema.User)
-def read_user(
-    user_id: int, db: Session = Depends(get_db)
-):
+def read_user(user_id: int, db: Session = Depends(get_db)):
     db_user = user_handler.get_user(db, user_id=user_id)
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")

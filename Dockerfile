@@ -15,9 +15,9 @@ RUN pip3 install --upgrade pip -r $APP_DIR/requirements.txt
 # Add the rest of the code
 COPY . $APP_DIR
 
-# Make port 8000 available for the app
-EXPOSE 8000
+ENV PORT=$PORT
+EXPOSE $PORT
  
 # Be sure to use 0.0.0.0 for the host within the Docker container,
 # otherwise the browser won't be able to find it
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD uvicorn app.main:app --host 0.0.0.0 --port $PORT

@@ -1,12 +1,12 @@
 from datetime import datetime, timedelta
 
-from jose import jwt, JWTError
+from jose import JWTError, jwt
 from passlib.context import CryptContext
 
 from app.config import SECRET_KEY
-from app.schemas.auth import TokenData
 from app.crud import user_handler
 from app.errors import credentials_exception
+from app.schemas.auth import TokenData
 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # one week
@@ -38,6 +38,7 @@ def create_access_token(data: dict):
     print(SECRET_KEY)
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
 
 def get_token_data(token: str) -> TokenData:
     try:
