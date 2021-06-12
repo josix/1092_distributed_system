@@ -12,6 +12,6 @@ class TokenData(BaseModel):
     username: Optional[str] = None
 
 
-class LoginForm(BaseModel):
+class Login(BaseModel):
     username: str
     password: str
