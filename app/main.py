@@ -5,11 +5,12 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from app import models
-from app.crud import item_handler, user_handler
+from app.crud import item_handler, stock_handler, user_handler
 from app.database import SessionLocal, engine
 from app.errors import credentials_exception
 from app.schemas import auth as auth_schema
 from app.schemas import item as item_schema
+from app.schemas import stock as stock_schema
 from app.schemas import user as user_schema
 from app.services.jwt import authenticate_user, create_access_token, get_token_data
 
@@ -44,7 +45,9 @@ def get_current_user(db: Session = Depends(get_db), token=Depends(oauth2_scheme)
 
 
 @app.post("/login/form", response_model=auth_schema.Token)
-async def login_form(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+async def login_form(
+    form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
+):
     user = authenticate_user(db, form_data.username, form_data.password)
     if not user:
         raise HTTPException(status_code=400, detail="Incorrect username or password")
@@ -104,3 +107,27 @@ def create_item_for_user(
 def read_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     items = item_handler.get_items(db, skip=skip, limit=limit)
     return items
+
+
+@app.post("/stock/", response_model=stock_schema.Stock)
+def create_stock(stock: stock_schema.StockCreate, db: Session = Depends(get_db)):
+    db_stock = stock_handler.get_stock_by_symbol_id(db, symbol_id=stock.symbolId)
+    if db_stock:
+        raise HTTPException(status_code=400, detail="SymbolId already registered")
+    stock_in_db: stock_schema.Stock = stock_handler.create_stock(db, stock)
+    return stock_in_db
+
+
+@app.post("/users/{user_id}/likes")
+def add_favorate_stock_to_user():
+    pass
+
+
+@app.delete("/users/{user_id}/likes/{stock_id}")
+def remove_favorate_stock_from_user():
+    pass
+
+
+@app.get("/users/{user_id}/likes")
+def get_user_likes():
+    pass

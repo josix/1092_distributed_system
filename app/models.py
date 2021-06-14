@@ -27,3 +27,17 @@ class Item(Base):
     owner_id = Column(Integer, ForeignKey("users.id"))
 
     owner = relationship("User", back_populates="items")
+
+
+class Stock(Base):
+    __tablename__ = "stocks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    isIndex = Column(Boolean, index=True)
+    nameZhTw = Column(String, index=True)
+    industryZhTw = Column(String, index=True)
+    abnormal = Column(String, index=True)
+    mode = Column(String, index=True)
+    symbolId = Column(String, index=True, unique=True)
+    countryCode = Column(String, index=True)
+    timeZone = Column(String, index=True)
