@@ -7,6 +7,8 @@
   3. sign up
   4. user create item
   5. search user's item
+  6. search stock's meta data
+  7. search stock's chart data
 
   environment set up:
   ```bash
