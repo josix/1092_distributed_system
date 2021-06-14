@@ -119,7 +119,7 @@ async def search_meta(symbolId):
     res = requests.post('http://clip3.cs.nccu.edu.tw:9200/meta/_search/',headers=header,data=body_json)
     if res.status_code!=200:
         raise HTTPException(status_code=res.status_code, detail="Stock not found")
-    return res.json()['hits']['hits']
+    return res.json()['hits']['hits']['source']
 
 @app.get("/search/chart/{symbolId}")
 async def search_chart(symbolId):
