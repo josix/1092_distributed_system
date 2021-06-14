@@ -1,4 +1,7 @@
 from typing import List
+import uvicorn
+import json
+import requests
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
@@ -96,3 +99,48 @@ def create_item_for_user(
 def read_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     items = item_handler.get_items(db, skip=skip, limit=limit)
     return items
+
+@app.get("/search/meta/{symbolId}")
+async def search_meta(symbolId):
+    header = \
+    {"Content-Type": "application/json;charset=UTF-8"}
+
+    body = \
+    {
+        "query":{
+                "term":{
+                        "symbolId":{
+                                "value": symbolId
+                        }
+                }
+        }
+    }
+    body_json = json.dumps(body)
+    res = requests.post('http://clip3.cs.nccu.edu.tw:9200/meta/_search/',headers=header,data=body_json)
+    if res.status_code!=200:
+        raise HTTPException(status_code=res.status_code, detail="Stock not found")
+    return res.json()['hits']['hits']
+
+@app.get("/search/chart/{symbolId}")
+async def search_chart(symbolId):
+    header = \
+    {"Content-Type": "application/json;charset=UTF-8"}
+
+    body = \
+    {
+        "query":{
+                "term":{
+                        "symbolId":{
+                                "value": symbolId
+                        }
+                }
+        }
+    }
+    body_json = json.dumps(body)
+    res = requests.post('http://clip3.cs.nccu.edu.tw:9200/chart/_search/',headers=header,data=body_json)
+    if res.status_code!=200:
+        raise HTTPException(status_code=res.status_code, detail="Stock not found")
+    return res.json()['hits']['hits']
+
+if __name__ == '__main__':
+    uvicorn.run(app='main:app', host="127.0.0.1", port=8000, reload=True, debug=True)
