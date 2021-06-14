@@ -109,6 +109,12 @@ def read_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return items
 
 
+@app.get("/stock/list", response_model=List[stock_schema.Stock])
+def get_stocks(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    stocks = stock_handler.get_stocks(db, skip=skip, limit=limit)
+    return stocks
+
+
 @app.post("/stock/", response_model=stock_schema.Stock)
 def create_stock(stock: stock_schema.StockCreate, db: Session = Depends(get_db)):
     db_stock = stock_handler.get_stock_by_symbol_id(db, symbol_id=stock.symbolId)
@@ -118,16 +124,40 @@ def create_stock(stock: stock_schema.StockCreate, db: Session = Depends(get_db))
     return stock_in_db
 
 
-@app.post("/users/{user_id}/likes")
-def add_favorate_stock_to_user():
-    pass
+@app.post("/user/likes/{symbol_id}")
+def add_favorate_stock_to_user(
+    symbol_id: str,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(get_current_user),
+):
+    db_stock = stock_handler.get_stock_by_symbol_id(db, symbol_id=symbol_id)
+    if db_stock is None:
+        raise HTTPException(status_code=400, detail="Stock does not exist.")
+    user.stocks.append(db_stock)
+    db.commit()
+    return {"success": True}
 
 
-@app.delete("/users/{user_id}/likes/{stock_id}")
-def remove_favorate_stock_from_user():
-    pass
+@app.delete("/user/dislike/{symbol_id}")
+def remove_favorate_stock_from_user(
+    symbol_id: str,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(get_current_user),
+):
+    db_stock = stock_handler.get_stock_by_symbol_id(db, symbol_id=symbol_id)
+    if db_stock is None:
+        raise HTTPException(status_code=400, detail="Stock does not exist.")
+    if db_stock in user.stocks:
+        user.stocks.remove(db_stock)
+        db.commit()
+    else:
+        raise HTTPException(status_code=400, detail="Stock not in favorite list.")
+    return {"success": True}
 
 
-@app.get("/users/{user_id}/likes")
-def get_user_likes():
-    pass
+@app.get("/user/likes/list")
+def get_user_likes(
+    db: Session = Depends(get_db), user: models.User = Depends(get_current_user)
+):
+    db_stocks = user_handler.get_stocks_by_user(db, user_id=user.id)
+    return {"stocks": db_stocks}

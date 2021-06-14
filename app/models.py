@@ -1,9 +1,14 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
+import datetime
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Table, DateTime
 from sqlalchemy.orm import relationship
 
 from .database import Base
 
-
+favorites_table = Table('favorites', Base.metadata,
+    Column('user_id', Integer, ForeignKey('users.id')),
+    Column('stock_id', Integer, ForeignKey('stocks.id')),
+    Column('created_at', DateTime, default=datetime.datetime.utcnow)
+)
 class User(Base):
 
     __tablename__ = "users"
@@ -15,6 +20,11 @@ class User(Base):
     is_active = Column(Boolean, default=True)
 
     items = relationship("Item", back_populates="owner")
+    stocks = relationship(
+        "Stock",
+        secondary=favorites_table,
+        back_populates="users")
+
 
 
 class Item(Base):
@@ -41,3 +51,8 @@ class Stock(Base):
     symbolId = Column(String, index=True, unique=True)
     countryCode = Column(String, index=True)
     timeZone = Column(String, index=True)
+
+    users = relationship(
+        "User",
+        secondary=favorites_table,
+        back_populates="stocks")
