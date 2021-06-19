@@ -15,7 +15,15 @@
   pip install pipx
   pipx install pipenv
   pipenv install
+  pipenv run dev
   ```
   how to use:
   1. open terminal and enter "pipenv run uvicorn app.main:app --reload"
   2. open "http://127.0.0.1/docs/"
+
+# Deployment
+```
+docker build .
+heroku container:push web -a <app_name>
+heroku container:release web -a <app_name>
+```
